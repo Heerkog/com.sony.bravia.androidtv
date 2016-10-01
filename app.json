@@ -101,7 +101,7 @@
                                 "en": "Device polling minutes",
                                 "nl": "Apparaat pollen minuten"
                             },
-                            "value": 5
+                            "value": "5"
                         }
                     ]
                 }
