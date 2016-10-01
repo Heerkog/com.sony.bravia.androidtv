@@ -39,8 +39,8 @@
                 "en": "Sony Bravia Android TV"
             },
             "images": {
-                "large": "assets/images/SBATVL.jpg",
-                "small": "assets/images/SBATVS.jpg"
+                "large": "drivers/tv/assets/images/SBATVL.jpg",
+                "small": "drivers/tv/assets/images/SBATVS.jpg"
             },
             "class": "tv",
             "capabilities": [
