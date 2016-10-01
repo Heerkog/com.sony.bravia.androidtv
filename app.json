@@ -13,6 +13,18 @@
         "name": "Marco Frijmann",
         "website": "https://www.frijmann.nl"
     },
+   "contributors": {
+	    "developers": [
+		    {
+			    "name": "Jorden Chamid",
+				"email": "info@chamidmedia.nl"
+			},
+			{
+				"name": "Marco Frijmann",
+				"email": ""
+			}
+	    ]
+    },
     "images": {
         "large": "assets/images/SBATVL.jpg",
         "small": "assets/images/SBATVS.jpg"

@@ -72,6 +72,9 @@ If the 'Please set PSK' message appears, then probably the PSK is not insync wit
 - english
 - dutch (todo)
 
+#Credits
+A great app, originally created by Marco Frijmann. As Marco stopped support, I took the app under my wings (with permission of MarcoF).
+
 **Use at your own risk, I accept no responsibility for any damages caused by using this script.**
 
 #known issues
