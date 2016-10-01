@@ -1,0 +1,477 @@
+{
+    "id": "com.sony.bravia.androidtv",
+    "version": "0.3.0",
+    "compatibility": ">=0.8.38",
+    "category": "video",
+    "name": {
+        "en": "Sony Bravia(KD, KDL series) Android TV"
+    },
+    "description": {
+        "en": "Adds support for your Sony Bravia(KD, KDL series) Android TV"
+    },
+    "author": {
+        "name": "Marco Frijmann",
+        "website": "https://www.frijmann.nl"
+    },
+    "images": {
+        "large": "assets/images/SBATVL.jpg",
+        "small": "assets/images/SBATVS.jpg"
+    },
+    "dependencies": {
+        "net": "*"
+    },
+    "drivers": [
+        {
+            "id": "tv",
+            "name": {
+                "en": "Sony Bravia Android TV"
+            },
+            "images": {
+                "large": "assets/images/SBATVL.jpg",
+                "small": "assets/images/SBATVS.jpg"
+            },
+            "class": "tv",
+            "capabilities": [
+                "onoff", "volume_set"
+            ],
+            "mobile": {
+                "components": [
+                    {
+                        "id": "icon",
+                        "capabilities": ["onoff"]
+                    }
+                ]
+            },
+            "pair": [
+                {
+                    "id": "start"
+                },
+                {
+                    "id": "list_devices",
+                    "template": "list_devices",
+                    "navigation": {
+                        "next": "add_my_devices"
+                    }
+                },
+                {
+                    "id": "add_my_devices",
+                    "template": "add_devices"
+                }
+            ],
+            "settings": [
+                {
+                    "type": "group",
+                    "label": {
+                        "en": "General settings",
+                        "nl": "Algemene instellingen"
+                    },
+                    "children": [
+                        {
+                            "id": "ip",
+                            "type": "text",
+                            "label": {
+                                "en": "IP address",
+                                "nl": "IP adres"
+                            },
+                            "value": "0.0.0.0"
+                        }, {
+                            "id": "psk",
+                            "type": "text",
+                            "label": {
+                                "en": "Pre-Shared key",
+                                "nl": "Pre-Shared key"
+                            },
+                            "value": "----"
+                        }, {
+                            "id": "polling",
+                            "type": "text",
+                            "label": {
+                                "en": "Device polling minutes",
+                                "nl": "Apparaat pollen minuten"
+                            },
+                            "value": 5
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "flow": {
+        "triggers": [
+            {
+                "id": "connection_error",
+                "title": {
+                    "en": "Connection error(timeout|refused)?"
+                },
+                "tokens": [
+                    {
+                        "name": "error_type",
+                        "title": {
+                            "en": "error type"
+                        },
+                        "example": {
+                            "en": "'timeout' or 'refused'"
+                        }
+                    }
+                ]
+            }, {
+                "id": "PowerOff",
+                "title": {
+                    "en": "TV turned off?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "PowerOn",
+                "title": {
+                    "en": "TV turned on?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "Netflix",
+                "title": {
+                    "en": "Netflix started?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "ChannelUp",
+                "title": {
+                    "en": "Channel Up (+)?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "ChannelDown",
+                "title": {
+                    "en": "Channel Down (-)?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "VolumeUp",
+                "title": {
+                    "en": "Volume Up (+)?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "VolumeDown",
+                "title": {
+                    "en": "Volume Down (-)?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "Mute",
+                "title": {
+                    "en": "TV muted?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "UnMute",
+                "title": {
+                    "en": "TV un mute?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "SetInput",
+                "title": {
+                    "en": "HDMI changed?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "Options",
+                "title": {
+                    "en": "TV options started?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }, {
+                "id": "EPG",
+                "title": {
+                    "en": "EPG options started?"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }
+        ],
+        "actions": [
+            {
+                "id": "PowerOn",
+                "title": {
+                    "en": "Turn power on",
+                    "nl": "Aanzetten"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "PowerOff",
+                "title": {
+                    "en": "Power off/standby",
+                    "nl": "Uitschakelen/standby"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "Netflix",
+                "title": {
+                    "en": "Netflix",
+                    "nl": "Netflix"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "SetInput",
+                "title": {
+                    "en": "Select input",
+                    "nl": "Selecteer input"
+                },
+                "args": [
+                    {
+                        "name": "input",
+                        "type": "autocomplete",
+                        "placeholder": {
+                            "en": "input",
+                            "nl": "input"
+                        }
+                    },
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "Mute",
+                "title": {
+                    "en": "Mute",
+                    "nl": "Zet mute aan"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "UnMute",
+                "title": {
+                    "en": "Unmute",
+                    "nl": "Zet mute uit"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "EPG",
+                "title": {
+                    "en": "Electronic Programming Guide",
+                    "nl": "Programma overzicht"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "VolumeDown",
+                "title": {
+                    "en": "Volume down (-1)",
+                    "nl": "Volume omlaag (-1)"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "VolumeUp",
+                "title": {
+                    "en": "Volume up (+1)",
+                    "nl": "Volume omhoog (+1)"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "ChannelDown",
+                "title": {
+                    "en": "Channel down (-1)",
+                    "nl": "Kanaal omlaag (-1)"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            },
+            {
+                "id": "ChannelUp",
+                "title": {
+                    "en": "Channel up (+1)",
+                    "nl": "Kanaal omhoog (+1)"
+                },
+                "args": [
+                    {
+                        "name": "device",
+                        "type": "device",
+                        "placeholder": {
+                            "en": "Select television",
+                            "nl": "Selecteer television"
+                        },
+                        "filter": "driver_id=tv"
+                    }
+                ]
+            }
+        ]
+    },
+    "dependencies": {
+        "request": "*",
+        "extend": "*"
+    }
+}
+
