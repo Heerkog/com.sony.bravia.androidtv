@@ -4,6 +4,7 @@ var httpmin = require("http.min");
 var ssdp = require('node-ssdp').Client;
 var ip = require('ip');
 var async = require('async');
+var wol = require('wake_on_lan');
 
 var xmlEnvelope = '<?xml version="1.0"?><s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body><u:X_SendIRCC xmlns:u="urn:schemas-sony-com:service:IRCC:1"><IRCCCode>%code%</IRCCCode></u:X_SendIRCC></s:Body></s:Envelope>';
 var foundDevices = [];
@@ -21,14 +22,21 @@ var scriptStarted = now.toJSON();
 
 
 function setDeviceAvailability(device_data) {
+    Homey.log("test");
     if (typeof (devices[device_data.id].settings) !== 'undefined') {
+        var random = Math.floor(Math.random() * 1000000000);
+
         var options = {
             uri: 'http://' + devices[device_data.id].settings.ip + '/sony/system',
             timeout: 2000,
-            headers: {"X-Auth-PSK": devices[device_data.id].settings.psk, "Content-Type": "application/json"},
-            json: {"method": "getSystemInformation", "params": [], "id": 5, "version": "1.0"}
+            headers: {
+                "X-Auth-PSK": devices[device_data.id].settings.psk,
+                "Content-Type": "application/json",
+                "cache-control": "no-cache",
+                "random": random
+            },
+            json: {"method": "getPowerStatus", "params": [], "id": 5, "version": "1.0"}
         }
-
         httpmin.post(options).then(function (data) {
             var statusCode = data.response.statusCode;
             if (statusCode == 200) {
@@ -38,34 +46,40 @@ function setDeviceAvailability(device_data) {
             } else {
                 module.exports.setUnavailable(device_data, "(" + statusCode + ") unkwn error");
             }
-
             Homey.log("setDeviceAvailability: " + statusCode);
         }).catch(function (err) {
             // if err is 'timeout', set device unavailable
-            if (typeof (err) === 'object') {
-                err = err.code;
-            }
 
-            if (err.toLowerCase().indexOf('timeout') >= 0) {
-                errorMessage = "timeout";
-            } else if (err.toLowerCase().indexOf('refused') >= 0) {
-                errorMessage = "refused";
+            if (typeof (err) === 'string') {
+                Homey.log("setDeviceAvailability error === string::" + err);
+                if (err.toLowerCase().indexOf('timeout') >= 0) {
+                    errorMessage = "timeout";
+                } else if (err.toLowerCase().indexOf('refused') >= 0) {
+                    errorMessage = "refused";
+                } else {
+                    errorMessage = "unknown err";
+                }
+                module.exports.setUnavailable(device_data, "Req. " + errorMessage);
+
+                // TRIGGER: token
+                var error_type = {'error_type': err}
+                Homey.manager('flow').trigger('connection_error', error_type, function (err, result) {
+                    Homey.log("trigger App connection_error");
+                });
+                Homey.log(errorMessage + " error");
             } else {
-                errorMessage = "unknown err";
+                errorMessage = "Unknown error(SDA)";
+                Homey.log('Unknown error(SDA)')
+                var error_type = {'error_type': errorMessage}
+                Homey.manager('flow').trigger('connection_error', error_type, function (errorMessage, result) {
+                    Homey.log("trigger App connection_error");
+                });
+                module.exports.setUnavailable(device_data, "TV 'unreachable'");
             }
-
-            module.exports.setUnavailable(device_data, "Req. " + errorMessage);
-
-            // TRIGGER: token
-            var error_type = {'error_type': err}
-            Homey.manager('flow').trigger('connection_error', error_type, function (err, result) {
-                Homey.log("trigger App connection_error");
-            });
-            Homey.log(errorMessage + " error");
         });
     } else {
         module.exports.setUnavailable(device_data, "no ip");
-        Homey.log("device has no 'settings.ip'");
+        Homey.log("setDeviceAvailability, device has no 'settings.ip'");
     }
 }
 
@@ -74,11 +88,16 @@ function getDeviceState(device_data) {
     //- http://192.168.1.61/sony/system
     //- {"method":"getPowerStatus","params":[],"id":5,"version":"1.0"}
     //- {"result":[{"status":"standby"}],"id":5}
-
+    var random = Math.floor(Math.random() * 1000000000);
     var options = {
         uri: 'http://' + devices[device_data.id].settings.ip + '/sony/system',
         timeout: 2000,
-        headers: {"X-Auth-PSK": devices[device_data.id].settings.psk, "Content-Type": "application/json"},
+        headers: {
+            "X-Auth-PSK": devices[device_data.id].settings.psk,
+            "Content-Type": "application/json",
+            "cache-control": "no-cache",
+            "random": random
+        },
         json: {"method": "getPowerStatus", "params": [], "id": 5, "version": "1.0"}
     }
     httpmin.post(options).then(function (data) {
@@ -99,6 +118,7 @@ function getDeviceState(device_data) {
         Homey.log(devices[device_data.id]);
         Homey.log("xxxxxxx getDeviceState xxxxxxxxx");
     }).catch(function (err) {
+        Homey.log("getDeviceState");
         Homey.log(err);
     });
 
@@ -113,6 +133,12 @@ function initDevice(device_data) {
     module.exports.getSettings(device_data, function (err, settings) {
         // INIT: set device settings
         devices[device_data.id].settings = settings;
+        if (typeof (devices[device_data.id].settings.useWOL) === "undefined") {
+            devices[device_data.id].settings.useWOL = false;
+        }
+        if (typeof (devices[device_data.id].settings.macAddr) === "undefined") {
+            devices[device_data.id].settings.macAddr = "00:00:00:00:00:00";
+        }
         devices[device_data.id].state.onoff = false;
         // INIT: get current device status (standby/powerOn)
         getDeviceState(device_data);
@@ -213,6 +239,7 @@ var self = module.exports = {
             devices[device_data.id].settings[key] = newSettingsObj[key];
             setDeviceAvailability(device_data);
         })
+        Homey.log(devices[device_data.id]);
         callback(null, true);
     },
     added: function (device_data, callback) {
@@ -314,11 +341,12 @@ function getBasicDeviceInfo(device, callback) {
     Homey.log('========== ================== ==========');
     var deviceName = '';
     var deviceValid = false;
-
+    var random = Math.floor(Math.random() * 1000000000);
     var options = {
-        uri: 'http://' + device.settings.ip + '/sony/system',
+        uri: 'http://' + device.settings.ip + '/sony/system?_rand=' + random,
         timeout: 2000,
-        headers: {"X-Auth-PSK": device.settings.psk, "Content-Type": "application/json"},
+        headers: {"X-Auth-PSK": device.settings.psk, "Content-Type": "application/json", "cache-control": "no-cache", "random": random
+        },
         json: {"method": "getInterfaceInformation", "params": [], "id": 2, "version": "1.0"}
     }
 
@@ -379,14 +407,21 @@ function getBasicDeviceInfo(device, callback) {
 
 function getExtendedDeviceInfo(device_data) {
     Homey.log("get extended device info");
-
+    var random = Math.floor(Math.random() * 1000000000);
     var options = {
-        uri: 'http://' + devices[device_data.id].settings.ip + '/sony/system',
+        uri: 'http://' + devices[device_data.id].settings.ip + '/sony/system?_random=' + random,
         timeout: 2000,
-        headers: {"X-Auth-PSK": devices[device_data.id].settings.ip, "Content-Type": "application/json"},
+        headers: {
+            "X-Auth-PSK": devices[device_data.id].settings.psk,
+            "Content-Type": "application/json",
+            "cache-control": "no-cache",
+            "random": random
+        },
         json: {"method": "getSystemInformation", "params": [], "id": 5, "version": "1.0"}
     }
     httpmin.post(options).then(function (data) {
+        Homey.log("=== xxxxxx =======");
+        Homey.log(data);
         if (data.response.statusCode == 200) {
             module.exports.setAvailable(devices[device_data.id]);
             Homey.log("got response and statucode=", data.response.statusCode);
@@ -396,11 +431,12 @@ function getExtendedDeviceInfo(device_data) {
             devices[device_data.id]['data']['language'] = data.data.result[0].language;
             devices[device_data.id]['data']['model'] = data.data.result[0].model;
             devices[device_data.id]['data']['serial'] = data.data.result[0].serial;
-            devices[device_data.id]['data']['macAddr'] = data.data.result[0].macAddr;
+
             devices[device_data.id]['data']['generation'] = data.data.result[0].generation;
             devices[device_data.id]['data']['name'] = data.data.result[0].name;
             devices[device_data.id]['data']['area'] = data.data.result[0].area;
             devices[device_data.id]['data']['cid'] = data.data.result[0].cid;
+            devices[device_data.id]['data']['macAddr'] = data.data.result[0].macAddr;
             Homey.log(devices[device_data.id]);
         } else {
             Homey.log(devices[device_data.id]);
@@ -432,10 +468,39 @@ Homey.manager('flow').on('action.PowerOff', function (callback, args) {
     self.realtime(devices[args.device.id], 'onoff', false);
     sendCommand('PowerOff', devices[args.device.id], 'tv off', callback);
 });
+
 Homey.manager('flow').on('action.PowerOn', function (callback, args) {
     self.realtime(devices[args.device.id], 'onoff', true);
-    sendCommand('WakeUp', devices[args.device.id], 'tv on', callback);
+    Homey.log("=========== WOL: ===========");
+    Homey.log("WOL: before check");
+    Homey.log(devices[args.device.id].settings);
+    var mac = devices[args.device.id].settings.macAddr;
+
+    if (devices[args.device.id].settings.useWOL == true && mac != "00:00:00:00:00:00" && mac != "") {
+        Homey.log("WOL: Do for MAC:" + devices[args.device.id].settings.macAddr);
+        if (mac.match("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$")) {
+            Homey.log("WOL: Wake up TV: ", mac);
+            try {
+                wol.wake(mac);
+            } catch (err) {
+                var MACMessage = 'WOL: *MAC address invalid!';
+                Homey.log(MACMessage);
+                Homey.log(err);
+                callback(MACMessage, false);
+            }
+
+            callback(null, true);
+        } else {
+            var MACMessage = 'WOL: **MAC address invalid!';
+            Homey.log(MACMessage);
+            callback(MACMessage, false);
+        }
+    } else {
+        sendCommand('WakeUp', devices[args.device.id], 'tv on', callback);
+    }
 });
+
+
 Homey.manager('flow').on('action.Sleep', function (callback, args) {
     self.realtime(devices[args.device.id], 'onoff', false);
     sendCommand('Sleep', devices[args.device.id], 'Sleep', callback);
@@ -487,6 +552,55 @@ Homey.manager('flow').on('action.Options', function (callback, args) {
 Homey.manager('flow').on('action.EPG', function (callback, args) {
     sendCommand('EPG', devices[args.device.id], 'EPG', callback);
 });
+Homey.manager('flow').on('action.EPG', function (callback, args) {
+    sendCommand('EPG', devices[args.device.id], 'EPG', callback);
+});
+Homey.manager('flow').on('action.Enter', function (callback, args) {
+    sendCommand('Enter', devices[args.device.id], 'Enter', callback);
+});
+
+//////////////////////////////
+/////// NumX /////// 
+Homey.manager('flow').on('action.Num0', function (callback, args) {
+    sendCommand('Num0', devices[args.device.id], 'Num0', callback);
+});
+Homey.manager('flow').on('action.Num1', function (callback, args) {
+    sendCommand('Num1', devices[args.device.id], 'Num1', callback);
+});
+Homey.manager('flow').on('action.Num2', function (callback, args) {
+    sendCommand('Num2', devices[args.device.id], 'Num2', callback);
+});
+Homey.manager('flow').on('action.Num3', function (callback, args) {
+    sendCommand('Num3', devices[args.device.id], 'Num3', callback);
+});
+Homey.manager('flow').on('action.Num4', function (callback, args) {
+    sendCommand('Num4', devices[args.device.id], 'Num4', callback);
+});
+Homey.manager('flow').on('action.Num5', function (callback, args) {
+    sendCommand('Num5', devices[args.device.id], 'Num5', callback);
+});
+Homey.manager('flow').on('action.Num6', function (callback, args) {
+    sendCommand('Num6', devices[args.device.id], 'Num6', callback);
+});
+Homey.manager('flow').on('action.Num7', function (callback, args) {
+    sendCommand('Num7', devices[args.device.id], 'Num7', callback);
+});
+Homey.manager('flow').on('action.Num8', function (callback, args) {
+    sendCommand('Num8', devices[args.device.id], 'Num8', callback);
+});
+Homey.manager('flow').on('action.Num9', function (callback, args) {
+    sendCommand('Num9', devices[args.device.id], 'Num9', callback);
+});
+Homey.manager('flow').on('action.Num10', function (callback, args) {
+    sendCommand('Num10', devices[args.device.id], 'Num10', callback);
+});
+Homey.manager('flow').on('action.Num11', function (callback, args) {
+    sendCommand('Num11', devices[args.device.id], 'Num11', callback);
+});
+Homey.manager('flow').on('action.Num12', function (callback, args) {
+    sendCommand('Num12', devices[args.device.id], 'Num12', callback);
+});
+
 
 function searchItems(value, optionsArray) {
 
@@ -519,11 +633,16 @@ function sendCommand(findCode, device, flowName, callback) {
             var now = new Date();
             var jsonDate = now.toJSON();
             Homey.log("sendCommand: Command time:", jsonDate);
-
+            var random = Math.floor(Math.random() * 1000000000);
             var options = {
-                uri: 'http://' + device.settings.ip + '/sony/IRCC',
+                uri: 'http://' + device.settings.ip + '/sony/IRCC?_random=' + random,
                 timeout: 1000,
-                headers: {"X-Auth-PSK": device.settings.psk, "SOAPACTION": '"urn:schemas-sony-com:service:IRCC:1#X_SendIRCC"'},
+                headers: {
+                    "X-Auth-PSK": device.settings.psk,
+                    "SOAPACTION": '"urn:schemas-sony-com:service:IRCC:1#X_SendIRCC"',
+                    "cache-control": "no-cache",
+                    "random": random
+                },
                 request: function (req) {
                     req.write(xmlEnvelope.replace("%code%", sendcode))
                 }
@@ -532,13 +651,14 @@ function sendCommand(findCode, device, flowName, callback) {
             httpmin.post(options).then(function (data) {
 
                 var statusCode = data.response.statusCode;
-                Homey.log("statusCode::", statusCode);
+                Homey.log("statusCode:", statusCode);
+                Homey.log("response:", data.data);
                 if (statusCode == 200) {
                     Homey.log("sendCommand: command succes");
                     callback(null, true);
 
                 } else {
-                    Homey.log("sendCommand: unknown; " + response.statusCode);
+                    Homey.log("sendCommand: unknown statuscode: " + data.response.statusCode);
                     callback(null, true);
                 }
             }).catch(function (err) {

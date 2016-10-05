@@ -91,6 +91,17 @@ A great app, originally created by Marco Frijmann. As Marco stopped support, I t
 #Compatibility
 Homey version >= 0.8.38 (due to wrench/settings fix)
 
+#Buy me a beer/pizza/holiday?
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=KWMTEXY3U6VVN&lc=GB&item_name=HomeyApp&item_number=SonyBraviaApp&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
+
+
 # Changelog
+**Version 0.3.2:**
+- first implementation of WOL for older TV's
+
+**Version 0.3.1:**
+- Try to fix connection refused/timeout
+- First attempt to support older(between 2013-2015) bravia models
+
 **Version 0.3.0:**
 - First public release
