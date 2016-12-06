@@ -91,13 +91,17 @@ A great app, originally created by Marco Frijmann. As Marco stopped support, I t
 #Compatibility
 Homey version >= 0.8.38 (due to wrench/settings fix)
 
-#Buy me a beer/pizza/holiday?
+#Buy MarcoF a beer/pizza/holiday?
 [![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=KWMTEXY3U6VVN&lc=GB&item_name=HomeyApp&item_number=SonyBraviaApp&currency_code=EUR&bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)
 
+**Want to show your appreciation for this app? A donation to Jorden is possible via http://www.d2c.nl **
 
 # Changelog
 **Version 0.4.3:**
 - Bugfix
+
+**Version 0.4.2:**
+- Last version created by MarcoF
 
 **Version 0.3.2:**
 - first implementation of WOL for older TV's
