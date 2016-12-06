@@ -203,8 +203,19 @@ var self = module.exports = {
 
                 if (typeof callback == 'function') {
                     Homey.log("callback");
-                    Homey.log(typeof (device.state.onoff));
-                    callback(null, device.state.onoff);
+                    
+                    if (typeof device.state === "undefined") {
+	                    
+	                    Homey.log ('State = undefined');
+	                    callback(null, false);
+	                    
+                    } else {
+	                    
+	                    Homey.log(typeof (device.state.onoff));
+						callback(null, device.state.onoff);
+						
+					}
+					
                 }
             },
             set: function (device_data, onoff, callback) {

@@ -96,6 +96,9 @@ Homey version >= 0.8.38 (due to wrench/settings fix)
 
 
 # Changelog
+**Version 0.4.3:**
+- Bugfix
+
 **Version 0.3.2:**
 - first implementation of WOL for older TV's
 

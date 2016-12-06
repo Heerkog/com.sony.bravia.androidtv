@@ -1,6 +1,6 @@
 {
     "id": "com.sony.bravia.androidtv",
-    "version": "0.4.2",
+    "version": "0.4.3",
     "compatibility": ">=0.8.38",
     "category": "video",
     "name": {
